@@ -58,6 +58,7 @@ def run_stage(stage, client_name, dry=False, config_path="config/experiment.yaml
     logpath = f"runs/stage{stage}.jsonl"
     done = seen(logpath)
     temp = cfg["experiment"]["temperature"]
+    prompt_sha = get_prompt_sha()
     n_calls = n_ok = n_skip = 0
 
     for cell in enumerate_cells(cfg, stage):
@@ -81,11 +82,13 @@ def run_stage(stage, client_name, dry=False, config_path="config/experiment.yaml
                 "authenticity": cell["D"], "verdict": pr.verdict,
                 "flagged_offsets": pr.flagged_hours, "parse_ok": pr.ok,
                 "latency_s": round(comp.latency_s, 3), "ts": round(time.time(), 3),
+                "prompt_sha": prompt_sha,
             })
             n_calls += 1
             n_ok += int(pr.ok)
     return {"stage": stage, "calls": n_calls, "parsed_ok": n_ok,
-            "skipped_resume": n_skip, "log": logpath}
+            "skipped_resume": n_skip, "log": logpath,
+            "prompt_sha": prompt_sha}
 
 
 def main():
