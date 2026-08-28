@@ -1,0 +1,65 @@
+# Frozen center point + model matrix + staged design (Ch.4 §4.3–§4.4).
+# The center point is what every run inherits; freezing it keeps ~200 runs comparable.
+
+experiment:
+  window_hours: 24
+  temperature: 0.0
+  replicates: 5
+  granularity: hourly
+
+center_point:
+  framing: domain                     # A: domain | neutral
+  representation: raw                  # B: raw | raw_derived | derived_only
+  reference: pure_zs                   # C: pure_zs | reference_augmented
+  authenticity: [native, obfuscated]   # D: held as the control contrast at center
+
+# model_string values to VERIFY against provider docs before going live.
+models:
+  - id: opus-5
+    client: anthropic
+    model_string: claude-opus-5
+    role: performance anchor
+  - id: opus-4.8
+    client: anthropic
+    model_string: claude-opus-4-8
+    role: generation contrast vs opus-5
+  - id: gemini-3.1-pro
+    client: google                     # adapter is a stub until Google runs
+    model_string: gemini-3.1-pro
+    role: cross-vendor flagship
+  - id: gemini-3.6-flash
+    client: google                     # adapter is a stub until Google runs
+    model_string: gemini-3.6-flash
+    role: cross-vendor flash
+
+stages:
+  0:
+    name: contamination_probe
+    models: [opus-5]
+    recognition_probe: true
+    authenticity: [native, obfuscated]
+  1:
+    name: core_benchmark
+    models: [opus-5, opus-4.8, gemini-3.1-pro, gemini-3.6-flash]
+    authenticity: [native, obfuscated]
+  2:
+    name: framing_spoke
+    models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
+    framing: [domain, neutral]
+    authenticity: [native, obfuscated]
+  3:
+    name: representation_spoke
+    models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
+    representation: [raw_derived, derived_only]
+    authenticity: [native, obfuscated]
+  4:
+    name: reference_spoke
+    models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
+    reference: [pure_zs, reference_augmented]
+    authenticity: [native, obfuscated]
+
+# Live-run inputs. Generate obfuscated_csv with: python -m harness.obfuscate ...
+inputs:
+  native_csv:     data/BATADAL_test_dataset.csv
+  obfuscated_csv: data/BATADAL_test_dataset.correlational.csv
+  labels:         data/BATADAL_test_attack_list.csv
