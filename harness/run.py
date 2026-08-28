@@ -7,7 +7,7 @@ key and no real data. Live runs swap in the real client and load windows from di
     python -m harness.run --stage 0 --client anthropic   # live (needs ANTHROPIC_API_KEY)
 """
 from __future__ import annotations
-import argparse, itertools, time, yaml
+import argparse, itertools, subprocess, time, yaml
 from harness.client import get_client
 from harness.prompt import build_prompt
 from harness.parse import parse_response
@@ -20,6 +20,21 @@ def load_config(path):
     with open(path) as f:
         return yaml.safe_load(f)
 
+def get_prompt_sha():
+    """Return short git SHA, appended with '-dirty' if there are uncommitted
+    changes, or 'unknown' if not in a git repo. Called once per stage run."""
+    try:
+        sha = subprocess.check_output(
+            ["git", "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        dirty = subprocess.check_output(
+            ["git", "status", "--porcelain"],
+            stderr=subprocess.DEVNULL,
+        ).decode().strip()
+        return f"{sha}-dirty" if dirty else sha
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
 
 def enumerate_cells(cfg, stage):
     s = cfg["stages"][stage]
