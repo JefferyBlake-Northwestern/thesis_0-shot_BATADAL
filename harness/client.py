@@ -48,18 +48,14 @@ class AnthropicClient(BaseClient):
             self._client = Anthropic()         # reads ANTHROPIC_API_KEY
         return self._client
 
-    def complete(self, system, user, model_string, temperature):
+        def complete(self, system, user, model_string, temperature):
+        """temperature is accepted for compatibility but not for Anthropic API."""
         client = self._ensure()
         t0 = time.time()
         resp = client.messages.create(
-            model=model_string, max_tokens=1024, temperature=temperature,
+            model=model_string, max_tokens=1024,
             system=system, messages=[{"role": "user", "content": user}],
         )
-        dt = time.time() - t0
-        text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
-        version = getattr(resp, "model", model_string)   # served version (Ch.4 §4.8.3)
-        raw = resp.model_dump() if hasattr(resp, "model_dump") else {}
-        return Completion(text, version, dt, raw)
 
 
 class GoogleClient(BaseClient):
