@@ -98,6 +98,7 @@ def run_stage(stage, client_name, dry=False, config_path="config/experiment.yaml
                 "flagged_offsets": pr.flagged_hours, "parse_ok": pr.ok,
                 "latency_s": round(comp.latency_s, 3), "ts": round(time.time(), 3),
                 "prompt_sha": prompt_sha,
+                "response_text": comp.text,
             })
             n_calls += 1
             n_ok += int(pr.ok)
