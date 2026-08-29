@@ -57,7 +57,7 @@ class AnthropicClient(BaseClient):
         client = self._ensure()
         t0 = time.time()
         resp = client.messages.create(
-            model=model_string, max_tokens=1024,
+            model=model_string, max_tokens=8192,
             system=system, messages=[{"role": "user", "content": user}],
         )
         dt = time.time() - t0
