@@ -99,6 +99,8 @@ def run_stage(stage, client_name, dry=False, config_path="config/experiment.yaml
                 "latency_s": round(comp.latency_s, 3), "ts": round(time.time(), 3),
                 "prompt_sha": prompt_sha,
                 "response_text": comp.text,
+                "response_stop_reason": (comp.raw.get("stop_reason") if isinstance(comp.raw, dict) else None),
+                "response_output_tokens": (comp.raw.get("usage", {}).get("output_tokens") if isinstance(comp.raw, dict) else None),
             })
             n_calls += 1
             n_ok += int(pr.ok)
