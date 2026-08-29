@@ -48,14 +48,23 @@ class AnthropicClient(BaseClient):
             self._client = Anthropic()         # reads ANTHROPIC_API_KEY
         return self._client
 
-        def complete(self, system, user, model_string, temperature):
-        """temperature is accepted for compatibility but not for Anthropic API."""
+    def complete(self, system, user, model_string, temperature):
+        """`temperature` is accepted for interface compatibility with mock/Google
+        clients but not passed to the Anthropic API. SDK 1.0 removed sampling
+        params from messages.create()'s signature, and current Opus (4.7/4.8/5)
+        rejects any explicit sampling value server-side. See lab notebook
+        2026-08-28 for advisor decision."""
         client = self._ensure()
         t0 = time.time()
         resp = client.messages.create(
             model=model_string, max_tokens=1024,
             system=system, messages=[{"role": "user", "content": user}],
         )
+        dt = time.time() - t0
+        text = "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
+        version = getattr(resp, "model", model_string)   # served version (Ch.4 §4.8.3)
+        raw = resp.model_dump() if hasattr(resp, "model_dump") else {}
+        return Completion(text, version, dt, raw)
 
 
 class GoogleClient(BaseClient):
