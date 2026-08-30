@@ -39,6 +39,11 @@ def obfuscate(df, ts_col, numeric, binary, variant="correlational", seed=0):
             a = float(rng.uniform(0.5, 2.0))
             b = float(rng.uniform(-5.0, 5.0))
             out[c] = a * out[c] + b
+    elif variant == "schema_preserved":
+        for c in numeric:
+            a = float(rng.uniform(0.5, 2.0))
+            b = float(rng.uniform(-5.0, 5.0))
+            out[c] = a * out[c] + b
     elif variant == "physics_preserving":
         groups = {g: float(rng.uniform(0.5, 2.0))
                   for g in {_unit_group(c) for c in numeric}}
@@ -60,6 +65,20 @@ def obfuscate(df, ts_col, numeric, binary, variant="correlational", seed=0):
         out = out.rename(columns={ts_col: "row_id"})
 
     # Opaque column renaming + shuffle (numeric + binary only).
+    # Skipped for schema_preserved: column names are the recognition channel
+    # we deliberately leave open in that variant.
+    if variant != "schema_preserved":
+        data_cols = numeric + binary
+        tokens = [f"col_{i:04d}" for i in range(len(data_cols))]
+        rng.shuffle(tokens)
+        colmap = dict(zip(data_cols, tokens))
+        key["column_map"] = {v: k for k, v in colmap.items()}
+        out = out.rename(columns=colmap)
+        shuffled = list(rng.permutation([c for c in out.columns if c != "row_id"]))
+        order = (["row_id"] if "row_id" in out.columns else []) + shuffled
+        out = out[order]
+    return out, key
+
     data_cols = numeric + binary
     tokens = [f"col_{i:04d}" for i in range(len(data_cols))]
     rng.shuffle(tokens)
@@ -86,7 +105,7 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", required=True)
     ap.add_argument("--variant", default="correlational",
-                    choices=["correlational", "physics_preserving"])
+                    choices=["correlational", "schema_preserved", "physics_preserving"])
     ap.add_argument("--out-csv", required=True)
     ap.add_argument("--key-json", required=True)
     ap.add_argument("--seed", type=int, default=0)

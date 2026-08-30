@@ -59,7 +59,9 @@ def real_windows(cfg, authenticity):
     """Ingest the configured CSV for this authenticity and slice into 24h windows.
     Cached so a stage ingests each dataset once, not once per cell."""
     if authenticity not in _WIN_CACHE:
-        key = "native_csv" if authenticity == "native" else "obfuscated_csv"
+        key = {"native": "native_csv",
+               "obfuscated": "obfuscated_csv",
+               "schema_preserved": "schema_preserved_csv"}[authenticity]
         src = cfg["inputs"][key]
         df, ts, num, bina = ingest(src)
         _WIN_CACHE[authenticity] = W.slice_windows(

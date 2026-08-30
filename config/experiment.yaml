@@ -57,9 +57,14 @@ stages:
     models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
     reference: [pure_zs, reference_augmented]
     authenticity: [native, obfuscated]
+  9:
+    name: schema_preserved_probe
+    models: [opus-5]
+    authenticity: [schema_preserved]
 
 # Live-run inputs. Generate obfuscated_csv with: python -m harness.obfuscate ...
 inputs:
   native_csv:     data/BATADAL_test_dataset.csv
   obfuscated_csv: data/BATADAL_test_dataset.correlational.csv
+  schema_preserved_csv:  data/BATADAL_test_dataset.schema_preserved.csv
   labels:         data/BATADAL_test_attack_list.csv
