@@ -25,12 +25,15 @@ models:
     role: generation contrast vs opus-5
   - id: gemini-3.1-pro
     client: google                     # adapter is a stub until Google runs
-    model_string: gemini-3.1-pro
+    model_string: gemini-3.1-pro-preview
     role: cross-vendor flagship
   - id: gemini-3.6-flash
     client: google                     # adapter is a stub until Google runs
     model_string: gemini-3.6-flash
     role: cross-vendor flash
+  - id: grok-4                             # NEW
+    client: xai                            # NEW
+    model_string: grok-4.6                 # NEW — verify current string at docs.x.ai
 
 stages:
   0:
@@ -40,13 +43,13 @@ stages:
     authenticity: [native, obfuscated]
   1:
     name: core_benchmark
-    models: [opus-5, opus-4.8, gemini-3.1-pro, gemini-3.6-flash]
+    models: [opus-5, opus-4.8, gemini-3.1-pro, grok-4]
     authenticity: [native, obfuscated]
   2:
     name: framing_spoke
     models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
     framing: [domain, neutral]
-    authenticity: [native, obfuscated]
+    authenticity: [native, schema_preserved, obfuscated]
   3:
     name: representation_spoke
     models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
