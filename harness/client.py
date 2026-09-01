@@ -3,10 +3,18 @@
 MockClient      -> deterministic, no network, no key: validates the parse/score/log path.
 AnthropicClient -> live runs (reads ANTHROPIC_API_KEY; lazy import so the mock dry-run
                    needs neither the SDK nor a key).
-GoogleClient    -> stub; fill in before running the Gemini models.
+GoogleClient    -> Gemini via google-genai SDK; reads GEMINI_API_KEY (or GOOGLE_API_KEY).
+XAIClient       -> Grok via OpenAI-compatible endpoint at api.x.ai; reads XAI_API_KEY.
+
+Dependencies (install only what you use):
+    pip install anthropic       # AnthropicClient
+    pip install google-genai    # GoogleClient
+    pip install openai          # XAIClient (uses OpenAI SDK against api.x.ai)
 """
 from __future__ import annotations
-import time, hashlib
+import os
+import time
+import hashlib
 from dataclasses import dataclass
 
 
@@ -49,7 +57,7 @@ class AnthropicClient(BaseClient):
         return self._client
 
     def complete(self, system, user, model_string, temperature):
-        """`temperature` is accepted for interface compatibility with mock/Google
+        """`temperature` is accepted for interface compatibility with other
         clients but not passed to the Anthropic API. SDK 1.0 removed sampling
         params from messages.create()'s signature, and current Opus (4.7/4.8/5)
         rejects any explicit sampling value server-side. See lab notebook
@@ -68,9 +76,84 @@ class AnthropicClient(BaseClient):
 
 
 class GoogleClient(BaseClient):
+    """Gemini via the current google-genai SDK. Unlike Anthropic Opus, Gemini
+    accepts an explicit temperature. system_instruction goes in the config, not
+    the message list."""
+    def __init__(self):
+        self._client = None
+
+    def _ensure(self):
+        if self._client is None:
+            from google import genai
+            # genai.Client() reads GEMINI_API_KEY or GOOGLE_API_KEY from env
+            self._client = genai.Client()
+        return self._client
+
     def complete(self, system, user, model_string, temperature):
-        raise NotImplementedError("Google adapter stub -- fill in before running Gemini models.")
+        from google.genai import types
+        client = self._ensure()
+        t0 = time.time()
+        resp = client.models.generate_content(
+            model=model_string,
+            contents=user,
+            config=types.GenerateContentConfig(
+                system_instruction=system,
+                max_output_tokens=8192,
+                temperature=temperature,
+            ),
+        )
+        dt = time.time() - t0
+        text = resp.text or ""
+        version = getattr(resp, "model_version", model_string)
+        try:
+            raw = resp.model_dump() if hasattr(resp, "model_dump") else {}
+        except Exception:
+            raw = {}
+        return Completion(text, version, dt, raw)
+
+
+class XAIClient(BaseClient):
+    """Grok via xAI's OpenAI-compatible endpoint. Uses the openai SDK pointed
+    at api.x.ai; xAI is fully OpenAI-compatible per their docs. This is more
+    stable than the native xai-sdk, which is newer and less predictable."""
+    def __init__(self):
+        self._client = None
+
+    def _ensure(self):
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI(
+                api_key=os.getenv("XAI_API_KEY"),
+                base_url="https://api.x.ai/v1",
+            )
+        return self._client
+
+    def complete(self, system, user, model_string, temperature):
+        client = self._ensure()
+        t0 = time.time()
+        resp = client.chat.completions.create(
+            model=model_string,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            max_tokens=8192,
+            temperature=temperature,
+        )
+        dt = time.time() - t0
+        text = resp.choices[0].message.content or ""
+        version = getattr(resp, "model", model_string)
+        try:
+            raw = resp.model_dump() if hasattr(resp, "model_dump") else {}
+        except Exception:
+            raw = {}
+        return Completion(text, version, dt, raw)
 
 
 def get_client(name):
-    return {"mock": MockClient, "anthropic": AnthropicClient, "google": GoogleClient}[name]()
+    return {
+        "mock":       MockClient,
+        "anthropic":  AnthropicClient,
+        "google":     GoogleClient,
+        "xai":        XAIClient,
+    }[name]()
