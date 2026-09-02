@@ -14,7 +14,7 @@ def ingest(path):
     ts_col = next((c for c in df.columns
                    if any(k in c.lower() for k in ("time", "date", "datetime", "ts"))), None)
     if ts_col:
-        df[ts_col] = pd.to_datetime(df[ts_col], dayfirst=True, errors="coerce")   # the fix
+        df[ts_col] = pd.to_datetime(df[ts_col], format="%d/%m/%y %H", errors="coerce")   # the fix
         df = df.sort_values(ts_col).reset_index(drop=True)
     numeric, binary = [], []
     for c in df.columns:
