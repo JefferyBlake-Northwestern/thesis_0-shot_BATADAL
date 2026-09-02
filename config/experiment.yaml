@@ -43,13 +43,13 @@ stages:
     authenticity: [native, obfuscated]
   1:
     name: core_benchmark
-    models: [opus-5, opus-4.8, gemini-3.1-pro, grok-4]
-    authenticity: [native, obfuscated]
+    models: [opus-5, gemini-3.1-pro, grok-4]
+    authenticity: [native, schema_preserved, obfuscated]
   2:
     name: framing_spoke
-    models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
+    models: [opus-5, opus-4.8, gemini-3.1-pro, gemini-3.6-flash]
     framing: [domain, neutral]
-    authenticity: [native, schema_preserved, obfuscated]
+    authenticity: [native, obfuscated]
   3:
     name: representation_spoke
     models: [opus-5, gemini-3.1-pro, gemini-3.6-flash]
