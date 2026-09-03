@@ -31,9 +31,13 @@ models:
     client: google                     # adapter is a stub until Google runs
     model_string: gemini-3.6-flash
     role: cross-vendor flash
-  - id: grok-4                             # NEW
-    client: xai                            # NEW
-    model_string: grok-4.6                 # NEW — verify current string at docs.x.ai
+  - id: grok-4               
+    client: xai             
+    model_string: grok-4.6  
+  - id: gpt-5.6-sol
+    client: openai
+    model_string: gpt-5.6-sol           
+    role: cross-vendor flagship
 
 stages:
   0:
@@ -43,7 +47,7 @@ stages:
     authenticity: [native, obfuscated]
   1:
     name: core_benchmark
-    models: [opus-5, gemini-3.1-pro, grok-4]
+    models: [opus-5, gpt-5.6-sol, grok-4]
     authenticity: [native, schema_preserved, obfuscated]
   2:
     name: framing_spoke

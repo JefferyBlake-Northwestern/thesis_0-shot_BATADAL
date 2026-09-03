@@ -158,6 +158,38 @@ class XAIClient(BaseClient):
             raw = {}
         return Completion(text, version, dt, raw)
 
+class OpenAIClient(BaseClient):
+    """OpenAI's flagship models. Uses the openai SDK against the standard
+    api.openai.com endpoint. Reads OPENAI_API_KEY from env."""
+    def __init__(self):
+        self._client = None
+
+    def _ensure(self):
+        if self._client is None:
+            from openai import OpenAI
+            self._client = OpenAI()   # reads OPENAI_API_KEY
+        return self._client
+
+    def complete(self, system, user, model_string, temperature):
+        client = self._ensure()
+        t0 = time.time()
+        resp = client.chat.completions.create(
+            model=model_string,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            max_tokens=8192,
+            temperature=temperature,
+        )
+        dt = time.time() - t0
+        text = resp.choices[0].message.content or ""
+        version = getattr(resp, "model", model_string)
+        try:
+            raw = resp.model_dump() if hasattr(resp, "model_dump") else {}
+        except Exception:
+            raw = {}
+        return Completion(text, version, dt, raw)
 
 def get_client(name):
     return {
@@ -165,4 +197,5 @@ def get_client(name):
         "anthropic":  AnthropicClient,
         "google":     GoogleClient,
         "xai":        XAIClient,
+        "openai":     OpenAIClient,
     }[name]()
