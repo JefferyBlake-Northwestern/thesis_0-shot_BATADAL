@@ -102,7 +102,7 @@ class GoogleClient(BaseClient):
                     config=types.GenerateContentConfig(
                         system_instruction=system,
                         max_output_tokens=8192,
-                        emperature=temperature,
+                        temperature=temperature,
                     ),
                 )
                 break
