@@ -91,17 +91,27 @@ class GoogleClient(BaseClient):
 
     def complete(self, system, user, model_string, temperature):
         from google.genai import types
+        from google.genai.errors import ServerError
         client = self._ensure()
         t0 = time.time()
-        resp = client.models.generate_content(
-            model=model_string,
-            contents=user,
-            config=types.GenerateContentConfig(
-                system_instruction=system,
-                max_output_tokens=8192,
-                temperature=temperature,
-            ),
-        )
+        for attempt in range(5):
+            try:
+                resp = client.models.generate_content(
+                    model=model_string,
+                    contents=user,
+                    config=types.GenerateContentConfig(
+                        system_instruction=system,
+                        max_output_tokens=8192,
+                        emperature=temperature,
+                    ),
+                )
+                break
+            except ServerError as e:
+                if e.code == 503 and attempt < 4:
+                    wait = 2 ** attempt * 5  # 5, 10, 20, 40s
+                    time.sleep(wait)
+                    continue
+                raise
         dt = time.time() - t0
         text = resp.text or ""
         version = getattr(resp, "model_version", model_string)
@@ -110,7 +120,6 @@ class GoogleClient(BaseClient):
         except Exception:
             raw = {}
         return Completion(text, version, dt, raw)
-
 
 class XAIClient(BaseClient):
     """Grok via xAI's OpenAI-compatible endpoint. Uses the openai SDK pointed
