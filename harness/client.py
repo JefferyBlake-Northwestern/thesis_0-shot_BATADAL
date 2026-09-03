@@ -179,7 +179,7 @@ class OpenAIClient(BaseClient):
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
             ],
-            max_tokens=8192,
+            max_completion_tokens=8192,
             temperature=temperature,
         )
         dt = time.time() - t0
