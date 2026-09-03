@@ -180,7 +180,6 @@ class OpenAIClient(BaseClient):
                 {"role": "user", "content": user},
             ],
             max_completion_tokens=8192,
-            temperature=temperature,
         )
         dt = time.time() - t0
         text = resp.choices[0].message.content or ""
