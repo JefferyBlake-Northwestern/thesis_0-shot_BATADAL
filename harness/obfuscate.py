@@ -34,21 +34,27 @@ def obfuscate(df, ts_col, numeric, binary, variant="correlational", seed=0):
     rng = np.random.default_rng(seed)
     out = df.copy()
 
+    # Drop ground-truth label column before any transformation
+    if 'ATT_FLAG' in out.columns:
+        out = out.drop(columns=['ATT_FLAG'])
+    numeric = [c for c in numeric if c != 'ATT_FLAG']
+    binary = [c for c in binary if c != 'ATT_FLAG']
+
     if variant == "correlational":
         for c in numeric:
             a = float(rng.uniform(0.5, 2.0))
             b = float(rng.uniform(-5.0, 5.0))
-            out[c] = a * out[c] + b
+            out[c] = (a * out[c] + b).round(3) 
     elif variant == "schema_preserved":
         for c in numeric:
             a = float(rng.uniform(0.5, 2.0))
             b = float(rng.uniform(-5.0, 5.0))
-            out[c] = a * out[c] + b
+            out[c] = (a * out[c] + b).round(3) 
     elif variant == "physics_preserving":
         groups = {g: float(rng.uniform(0.5, 2.0))
                   for g in {_unit_group(c) for c in numeric}}
         for c in numeric:
-            out[c] = groups[_unit_group(c)] * out[c]
+            out[c] = (groups[_unit_group(c)] * out[c]).round(3)
     else:
         raise ValueError(f"unknown variant: {variant}")
 

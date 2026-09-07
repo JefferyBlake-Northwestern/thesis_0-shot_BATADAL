@@ -27,6 +27,14 @@ def ingest(path):
             binary.append(c)
         elif pd.api.types.is_numeric_dtype(df[c]):
             numeric.append(c)
+    # Drop ground-truth label column before it reaches the prompt path
+    if 'ATT_FLAG' in df.columns:
+        df = df.drop(columns=['ATT_FLAG'])
+    if 'ATT_FLAG' in binary:
+        binary.remove('ATT_FLAG')
+    if 'ATT_FLAG' in numeric:
+        numeric.remove('ATT_FLAG')
+        
     return df, ts_col, numeric, binary
 
 
