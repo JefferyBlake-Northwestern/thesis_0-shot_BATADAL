@@ -6,7 +6,7 @@ frontier LLMs (Anthropic Opus 5, OpenAI GPT-5.6 Sol, xAI Grok 4) on the
 BATADAL water distribution attack detection benchmark under a three-condition
 data authenticity design.
 
-**Thesis:** [Title], Jeffery Blake, Northwestern University, 2026.
+**Thesis:** Zero-Shot Cyber-Physical Anomaly Detection with Frontier Large Language Models: An Evaluation Under Contamination Control, Jeffery Blake, Northwestern University, 2026.
 
 ---
 
@@ -197,7 +197,7 @@ If you use this code or reference the results, please cite:
 ```bibtex
 @mastersthesis{blake2026zeroshot,
   author = {Blake, Jeffery},
-  title  = {[Thesis title]},
+  title  = {Zero-Shot Cyber-Physical Anomaly Detection with Frontier Large Language Models: An Evaluation Under Contamination Control},
   school = {Northwestern University},
   year   = {2026},
   url    = {https://github.com/JefferyBlake-Northwestern/thesis_0-shot_BATADAL}
