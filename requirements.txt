@@ -19,7 +19,7 @@ jiter==0.16.0
 numpy==2.4.6
 openai==3.6.0
 pandas==3.0.5
-pyasn1==0.6.4
+pyasn1==0.6.5
 pyasn1_modules==0.4.2
 pycparser==3.0
 pydantic==2.13.5
